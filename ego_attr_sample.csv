@@ -1,0 +1,7 @@
+interview,Name,Academia,Industry,Government
+32,Participant A,TRUE,FALSE,TRUE
+36,Participant B,TRUE,FALSE,FALSE
+46,Participant C,TRUE,FALSE,FALSE
+47,Participant D,TRUE,FALSE,TRUE
+69,Participant E,FALSE,TRUE,FALSE
+101,Participant F,FALSE,TRUE,TRUE
