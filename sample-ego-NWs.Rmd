@@ -15,7 +15,7 @@ library(egor)
 library(purrr) # not essential for networks, used in plotting
 ```
 
-Start by reading in the data:¨
+Start by reading in the data:
 
 ```{r read in data, message=FALSE}
 ties_support <- read_csv("ties_support_sample.csv")
