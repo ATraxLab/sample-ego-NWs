@@ -1,11 +1,17 @@
 ---
-title: "Supplemental Material"
-output: pdf_document
+title: "Critical Egocentric Mixed-Methods SNA: Analyzing Interviews with Women and/or Queer Ph.D. Physicists. Supplemental Material"
+output: 
+  pdf_document: 
+    number_sections: true
 ---
 
 This material shows sample code for the analyses described in the main text. The code loads in ego network tie and attribute data, turns them into ego networks, then shows plotting options and calculation of network statistics.
 
 The up-to-date code and sample data are stored at a Github repository, [https://github.com/ATraxLab/sample-ego-NWs](https://github.com/ATraxLab/sample-ego-NWs). 
+
+# Setup and import
+
+Load libraries:
 
 ```{r load libraries, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -15,7 +21,7 @@ library(egor)
 library(purrr) # not essential for networks, used in plotting
 ```
 
-Start by reading in the data:
+Read in the data:
 
 ```{r read in data, message=FALSE}
 ties_support <- read_csv("ties_support_sample.csv")
@@ -64,8 +70,10 @@ for (i in seq(n_interview)) {
 
 summary(gr_list[[6]])
 ```
+Support, gaps in support, and color are edge attributes, and all the other columns become node attributes. 
 
-## Plot with weighted support ties
+
+# Plot with weighted support ties
 
 The ggraph package can be used to display several kinds of the encoded network information at once. The loop below sets up a ggraph object for each ego network, using the count of support types and tie category to set line width and color, sizing nodes by Mentions, coloring by Proximity, and using a different shape for group nodes.
 
@@ -80,23 +88,27 @@ for (i in seq(n_interview)) {
   
   g <- ggraph(gr_list[[i]], layout = 'fr') + 
     geom_edge_link2(aes(edge_width = support, edge_colour = color)) +
-    scale_edge_color_manual(values = c("alter" = "blue", "gap" = "red", 
-                                       "support" = "green",
-                                       "no_support" = "black")) +
     geom_node_point(aes(size = Mentions, colour = Proximity, 
                         shape = Groups)) +
     ggtitle(paste("Interview", int_num)) + 
     theme_graph(base_family = "", base_size = 8) +
-    scale_color_continuous(type = "viridis") #colorblind-friendly, NA gray
+    scale_edge_color_manual(values = c("alter" = "blue", "gap" = "red", 
+                                       "support" = "green",
+                                       "no_support" = "black")) +
+    scale_color_continuous(type = "viridis") + #colorblind-friendly, NA gray
+    # next 3 lines condense the legend a bit
+    scale_size_continuous(breaks = c(1, 3, 5)) + 
+    scale_edge_width_continuous(breaks = c(0, 2, 4)) +
+    scale_shape(breaks = c(TRUE, FALSE))
   ggr_list[[i]] <- g
 }
 
 print(ggr_list[[5]])
 ```
 
-## Plots using egor package
+# Plots using egor package
 
-The egor package offers several plotting options tailored to personal networks. The first of these is through an interface to the networks package which has more streamlined defaults for visually comparing several ego networks at once. 
+The egor package offers several plotting options tailored to personal networks. The first of these is through an interface to the networks package, which has more streamlined defaults for visually comparing several ego networks at once. 
 
 First, the code below needs to call the `egor()` function, which takes three inputs: 
 
@@ -106,7 +118,7 @@ First, the code below needs to call the `egor()` function, which takes three inp
 
 It returns an egor object, which is a list of three data frames holding essentially the input frames (with key ID columns renamed to standard titles). 
 
-```{r make egor object, fig.width=3}
+```{r make egor object}
 # Filter the support ties frame to just alter-alter ties, then drop color column
 alter_connects <- ties_support %>% 
   filter(color == "alters") %>% 
@@ -118,6 +130,11 @@ egr <- egor(alters = alter_attr, egos = ego_attr,
             ID.vars = list(ego = "interview", alter = "Name", 
                            source = "Name1", target = "Name2"))
 
+```
+
+Plotting egr objects using ´as_network()´ was used to produce Fig. 8 in the paper:
+
+```{r plot egor networks, fig.width=3}
 plot_indices <- c(1:2)
 purrr::walk(as_network(egr[plot_indices], directed = FALSE, 
                        include.ego = TRUE, ), plot)
@@ -130,9 +147,9 @@ egr[1]
 ```
 
 
-## Network statistics
+# Network statistics
 
-To calculate network statistics, we first remove the egos. This can be done straightforwardly by the egor package, where the default behavior of the `as_igraph` function is to remove the ego.
+To calculate network statistics, we first remove the egos. This can be done straightforwardly by the egor package, where the default behavior of the `as_igraph()` function is to remove the ego.
 
 ```{r igraph objects with no ego}
 gr_noego <- as_igraph(egr)
@@ -204,13 +221,13 @@ nw_stats <- nw_stats %>%
 nw_stats
 ```
 
-## Alter composition plots
+# Alter composition plots
 
 Below are examples of plotting the composition of the alters by a single interview. The code also works if a subset of alters (e.g., by workforce sector) is selected instead of a single ego.
 
-### By alter count
+## By alter count
 
-```{r pie charts of alter counts, fig.width=3.5}
+```{r pie charts of alter counts, fig.width=6}
 # Subset method 1: single interview
 int <- 36
 int_attr <- alter_attr %>% filter(interview == int)
@@ -244,21 +261,19 @@ total_lab <- c("individual", "group", "institutional", "coll.superv")
 
 
 # Plot pie charts
-pie(individual[individual > 0], labels = indiv_lab, main = "individual")
-#pie(group[group > 0], labels = group_lab, main = "group")
-#pie(institutional[institutional > 0], labels = inst_lab, 
-#    main = "institutional")
-#pie(coll.superv[coll.superv > 0], labels = coll_lab, 
-#    main = "collegial.supervisorial")
-pie(total, labels = total_lab, main = "total")
-
-par(mfrow = c(1, 1)) #how many plots to show per page
+# Shows individual as example; group, institutional, and coll.superv use 
+#  similar code.
+par(mfrow = c(1, 2)) #how many plots to show per page
+pie(individual[individual > 0], labels = indiv_lab, main = "individual", 
+    cex = 0.8)
+pie(total, labels = total_lab, main = "total", cex = 0.8)
+par(mfrow = c(1, 1)) 
 ```
 
 
-### By alter mention
+## By alter mention
 
-```{r pie charts of alter mentions, fig.width=3.5}
+```{r pie charts of alter mentions, fig.width=6}
 # Subset method 1: single interview
 int <- 36
 int_attr <- alter_attr %>% filter(interview == int)
@@ -301,37 +316,36 @@ total_men <- c(sum(individual_men), sum(group_men), sum(institutional_men),
                sum(coll.superv_men))
 names(total_men) <- total_lab
 
-pie(individual_men[individual_men > 0], main = "Individual mentions")
-#pie(group_men[group_men > 0], main = "Group mentions")
-#pie(institutional_men[institutional_men > 0], main = "Institutional mentions")
-#pie(coll.superv_men[coll.superv_men > 0], 
-#    main = "Collegial & supervisorial mentions")
-pie(total_men[total_men > 0], main = "Total mentions")
+par(mfrow = c(1, 2)) #how many plots to show per page
+pie(individual_men[individual_men > 0], main = "Individual mentions", cex = 0.8)
+pie(total_men[total_men > 0], main = "Total mentions", cex = 0.8)
+par(mfrow = c(1, 1)) 
+```
 
+This can also be summed over a subset of interviews (here specified by interview number, but might be something like career sector):
 
+```{r pie charts of aggregated mentions, fig.width=6}
 # Summation for subset of interviews
 
-int2_attr <- alter_attr %>% filter(interview %in% c(34, 36))
+int2_attr <- alter_attr %>% filter(interview %in% c(32, 36))
 
 # Alter mentions of each type by category, also total
-individual_men <- count_mentions(int2_attr, indiv_lab)
-group_men <- count_mentions(int2_attr, group_lab)
-institutional_men <- count_mentions(int2_attr, inst_lab)
-coll.superv_men <- count_mentions(int2_attr, coll_lab)
-total_men <- c(sum(individual_men), sum(group_men), sum(institutional_men),
-               sum(coll.superv_men))
-names(total_men) <- total_lab
+individual_men2 <- count_mentions(int2_attr, indiv_lab)
+group_men2 <- count_mentions(int2_attr, group_lab)
+institutional_men2 <- count_mentions(int2_attr, inst_lab)
+coll.superv_men2 <- count_mentions(int2_attr, coll_lab)
+total_men2 <- c(sum(individual_men2), sum(group_men2), sum(institutional_men2),
+               sum(coll.superv_men2))
+names(total_men2) <- total_lab
 
-pie(individual_men[individual_men > 0], main = "Individual mentions")
-#pie(group_men[group_men > 0], main = "Group mentions")
-#pie(institutional_men[institutional_men > 0], main = "Institutional mentions")
-#pie(coll.superv_men[coll.superv_men > 0], 
-#    main = "Collegial & supervisorial mentions")
-pie(total_men[total_men > 0], main = "Total mentions")
+par(mfrow = c(1, 2)) #how many plots to show per page
+pie(individual_men2[individual_men2 > 0], main = "Individual mentions", cex = 0.8)
+pie(total_men2[total_men2 > 0], main = "Total mentions", cex = 0.8)
+par(mfrow = c(1, 1)) 
 ```
 
 
-## Clustered graphs with the egor package
+# Clustered graphs with the egor package
 
 Clustering alters by career stage or relationship gives a condensed view that can facilitate visually comparing a larger number of networks. 
 
@@ -348,7 +362,7 @@ vis_clustered_graphs(clus_graphs[2],
 ```
 
 
-## Quadrant graphs with the egor package
+# Quadrant graphs with the egor package
 
 Finally, networks can be plotted in sectors based on their category, and at distances scaled by some quantitative variable. The egor package provides the `plot_egograms` function, with relevant parameters for our sample case:
 
