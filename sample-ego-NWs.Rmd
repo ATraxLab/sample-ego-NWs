@@ -1,5 +1,5 @@
 ---
-title: "Critical Egocentric Mixed-Methods SNA: Analyzing Interviews with Women and/or Queer Ph.D. Physicists. Supplemental Material"
+title: "Egocentric Mixed-Methods SNA: Analyzing Interviews  with Women and/or Queer and LGBT+ Ph.D.\ Physicists. Supplemental Material"
 output: 
   pdf_document: 
     number_sections: true
@@ -77,7 +77,7 @@ Support, gaps in support, and color are edge attributes, and all the other colum
 
 The ggraph package can be used to display several kinds of the encoded network information at once. The loop below sets up a ggraph object for each ego network, using the count of support types and tie category to set line width and color, sizing nodes by Mentions, coloring by Proximity, and using a different shape for group nodes.
 
-After the loop, a sample plot is printed, corresponding to Figure 7 in the paper.
+After the loop, a sample plot is printed, corresponding to Fig.\ 5 in the paper.
 
 ```{r make ggraph objects, warning=FALSE, fig.height=6}
 # Set up empty list
@@ -132,7 +132,7 @@ egr <- egor(alters = alter_attr, egos = ego_attr,
 
 ```
 
-Plotting egr objects using ´as_network()´ was used to produce Fig. 8 in the paper:
+Plotting egr objects using ´as_network()´ was used to produce Fig.\ 6 in the paper:
 
 ```{r plot egor networks, fig.width=3}
 plot_indices <- c(1:2)
@@ -219,129 +219,6 @@ nw_stats <- nw_stats %>%
   relocate(percent_dissonance, .after = total_dissonance)
 
 nw_stats
-```
-
-# Alter composition plots
-
-Below are examples of plotting the composition of the alters by a single interview. The code also works if a subset of alters (e.g., by workforce sector) is selected instead of a single ego.
-
-## By alter count
-
-```{r pie charts of alter counts, fig.width=6}
-# Subset method 1: single interview
-int <- 36
-int_attr <- alter_attr %>% filter(interview == int)
-
-# Count alters of each type in these relational categories, also total
-individual <- c(sum(int_attr$partners), sum(int_attr$friends),
-                sum(int_attr$family), sum(int_attr$other))
-
-group <- c(sum(int_attr$subfield), sum(int_attr$groups.listservs),
-           sum(int_attr$conferences), sum(int_attr$affinity.group))
-
-institutional <- c(sum(int_attr$undergraduate.program), 
-                   sum(int_attr$graduate.program), sum(int_attr$postdoc),
-                   sum(int_attr$past.job), sum(int_attr$current.job),
-                   sum(int_attr$future.job))
-
-coll.superv <- c(sum(int_attr$bosses.supervisors), 
-                 sum(int_attr$mentors..professional.),
-                 sum(int_attr$mentees.direct.reports),
-                 sum(int_attr$coworkers.peers))
-
-total <- c(sum(individual), sum(group), sum(institutional), sum(coll.superv))
-
-# Vectors with labels for each type and for total
-indiv_lab <- c("partners", "friends", "family", "other")
-group_lab <- c("subfield", "groups.listservs", "conferences", "affinity")
-inst_lab <- c("undergrad", "grad", "postdoc", "past.job", "current.job", 
-              "future.job")
-coll_lab <- c("boss.super", "mentor", "mentee", "coworker")
-total_lab <- c("individual", "group", "institutional", "coll.superv")
-
-
-# Plot pie charts
-# Shows individual as example; group, institutional, and coll.superv use 
-#  similar code.
-par(mfrow = c(1, 2)) #how many plots to show per page
-pie(individual[individual > 0], labels = indiv_lab, main = "individual", 
-    cex = 0.8)
-pie(total, labels = total_lab, main = "total", cex = 0.8)
-par(mfrow = c(1, 1)) 
-```
-
-
-## By alter mention
-
-```{r pie charts of alter mentions, fig.width=6}
-# Subset method 1: single interview
-int <- 36
-int_attr <- alter_attr %>% filter(interview == int)
-
-# Vectors with labels for each type and for total
-# Must match column names exactly to make the code below easier
-indiv_lab <- c("partners", "friends", "family", "other")
-group_lab <- c("subfield", "groups.listservs", "conferences", "affinity.group")
-inst_lab <- c("undergraduate.program", "graduate.program", "postdoc", 
-              "past.job", "current.job", "future.job")
-coll_lab <- c("bosses.supervisors", "mentors..professional.", 
-              "mentees.direct.reports", "coworkers.peers")
-total_lab <- c("individual", "group", "institutional", "coll.superv")
-
-# Counts of mentions by alter category type
-individual_men <- int_attr %>% 
-  select(Mentions, all_of(indiv_lab)) %>% 
-  pivot_longer(cols = all_of(indiv_lab)) %>% 
-  mutate(Mentions = Mentions * value) %>%   # only count if TRUE for this node
-  summarise(n = sum(Mentions), .by = name) %>% 
-  deframe() # turn into a named vector
-individual_men <- individual_men[indiv_lab]  # restore original order
-
-# That's a lot of lines, make a function  
-count_mentions <- function(df, labs) {
-  mens <- df %>% 
-    select(Mentions, all_of(labs)) %>% 
-    pivot_longer(cols = all_of(labs)) %>% 
-    mutate(Mentions = Mentions * value) %>%   # only count if TRUE for this node
-    summarise(n = sum(Mentions), .by = name) %>% 
-    deframe() # turn into a named vector
-  mens <- mens[labs]  # restore original order
-  return(mens)
-}
-
-group_men <- count_mentions(int_attr, group_lab)
-institutional_men <- count_mentions(int_attr, inst_lab)
-coll.superv_men <- count_mentions(int_attr, coll_lab)
-total_men <- c(sum(individual_men), sum(group_men), sum(institutional_men),
-               sum(coll.superv_men))
-names(total_men) <- total_lab
-
-par(mfrow = c(1, 2)) #how many plots to show per page
-pie(individual_men[individual_men > 0], main = "Individual mentions", cex = 0.8)
-pie(total_men[total_men > 0], main = "Total mentions", cex = 0.8)
-par(mfrow = c(1, 1)) 
-```
-
-This can also be summed over a subset of interviews (here specified by interview number, but might be something like career sector):
-
-```{r pie charts of aggregated mentions, fig.width=6}
-# Summation for subset of interviews
-
-int2_attr <- alter_attr %>% filter(interview %in% c(32, 36))
-
-# Alter mentions of each type by category, also total
-individual_men2 <- count_mentions(int2_attr, indiv_lab)
-group_men2 <- count_mentions(int2_attr, group_lab)
-institutional_men2 <- count_mentions(int2_attr, inst_lab)
-coll.superv_men2 <- count_mentions(int2_attr, coll_lab)
-total_men2 <- c(sum(individual_men2), sum(group_men2), sum(institutional_men2),
-               sum(coll.superv_men2))
-names(total_men2) <- total_lab
-
-par(mfrow = c(1, 2)) #how many plots to show per page
-pie(individual_men2[individual_men2 > 0], main = "Individual mentions", cex = 0.8)
-pie(total_men2[total_men2 > 0], main = "Total mentions", cex = 0.8)
-par(mfrow = c(1, 1)) 
 ```
 
 
